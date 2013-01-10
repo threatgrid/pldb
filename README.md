@@ -60,7 +60,7 @@ To run a query with a given database, use with-db.
 ```clojure
 (pldb/with-db facts
     (run* [q]	
-        (l/fresh [x y]
+        (fresh [x y]
             (likes x y)
             (fun y)
             (== q [x y]))))
@@ -68,9 +68,9 @@ To run a query with a given database, use with-db.
 
 # Limitations
 
-- multiple arity relations are not supported yer
+- multiple arity relations are not supported yet
 - indexing is not implemented yet
-- retrations are not implemented yet
+- retractions are not implemented yet
 
 
 ## License
