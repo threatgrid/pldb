@@ -9,18 +9,19 @@
 (pldb/db-rel likes p1 p2)
 (pldb/db-rel fun p)
 
-(def facts0 (-> pldb/empty-db
-     (pldb/db-fact man 'Bob)
-     (pldb/db-fact man 'John)
-     (pldb/db-fact man 'Ricky)
-
-     (pldb/db-fact woman 'Mary)
-     (pldb/db-fact woman 'Martha)
-     (pldb/db-fact woman 'Lucy)
-
-     (pldb/db-fact likes 'Bob 'Mary)
-     (pldb/db-fact likes 'John 'Martha)
-     (pldb/db-fact likes 'Ricky 'Lucy)))
+(def facts0
+  (pldb/db-facts
+   [man 'Bob]
+   [man 'John]
+   [man 'Ricky]
+   
+   [woman 'Mary]
+   [woman 'Martha]
+   [woman 'Lucy]
+   
+   [likes 'Bob 'Mary]
+   [likes 'John 'Martha]
+   [likes 'Ricky 'Lucy]))
 
 (def facts1 (-> facts0
                 (pldb/db-fact fun 'Lucy)))
