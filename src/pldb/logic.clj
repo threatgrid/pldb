@@ -3,31 +3,76 @@
 
 (def ^:dynamic *logic-db* {})
 
-(defn db-keys []
-  (keys *logic-db*))
-
 (defn rel-key [rel]
   (if (keyword? rel)
     rel
-    (:rel-key (meta rel))))
+    (:rel-name (meta rel))))
 
-(defn facts-for [rel]
-  ((rel-key rel) *logic-db*))
+(defn rel-indexes [rel]
+  (:indexes (meta rel)))
+
+(defn facts-for [kname]
+  (get-in *logic-db* [kname ::unindexed]))
+
+(defn facts-using-index [kname index val]
+  (get-in *logic-db* [kname index val]))
+
+(defn indexed? [v]
+  (true? (:index (meta v))))
+
+(defn ground? [s term]
+  (not (l/contains-lvar? (l/walk* s term))))
+
+(defn index-for-query [s q indexes]
+  (let [indexable (map #(ground? s %)  q)
+        triples (map vector (range) indexable indexes)]
+    (first (for [[i indexable indexed] triples
+                 :when (and indexable indexed)]
+             i))))
 
 (defmacro db-rel [name & args]
-  (let [kname
-        (keyword name)]
+  (let [arity
+        (count args)
+        
+        kname
+        (str name "_" arity)
+
+        indexes
+        (vec (map indexed? args))]
     `(def ~name
-       (with-meta (fn [& v#]
-                    (fn [s#]
-                      (l/to-stream (map (fn [potential#]
-                                          (l/unify s# v# potential#))
-                                        (facts-for ~kname)))))
-         {:rel-key ~kname}))))
+       (with-meta (fn [& query#]
+                    (fn [subs#]
+                      (let [facts#
+                            (if-let [index# (index-for-query subs# query# ~indexes)]
+                              (facts-using-index ~kname index# (l/walk* subs#
+                                                                       (nth query# index#)))
+                              (facts-for ~kname))]
+                        (l/to-stream (map (fn [potential#]
+                                            (l/unify subs# query# potential#))
+                                          facts#)))))
+         {:rel-name ~kname
+          :indexes ~indexes}))))
 
 (defn db-fact [db rel & args]
-  (let [key (rel-key rel)]
-    (update-in db [key] #(conj %1 args))))
+  (let [key
+        (rel-key rel)
+
+        add-to-set
+        (fn [current new]
+          (conj (or current #{}) new))
+        
+        db-with-fact
+        (update-in db [key ::unindexed] #(add-to-set %1 args))
+
+        indexes-to-update ;; ugly - get the vector indexes of indexed attributes
+        (map vector (rel-indexes rel) (range) args)
+
+        update-index-fn
+        (fn [db [do-update index-num val]]
+          (if do-update
+            (update-in db [key index-num val] #(add-to-set %1 args))
+            db))]
+    (reduce update-index-fn db-with-fact indexes-to-update)))
 
 (defn db-facts [& facts]
   (reduce #(apply db-fact %1 %2) *logic-db* facts))
@@ -37,6 +82,5 @@
 (defmacro with-db [db & body]
   `(binding [*logic-db* ~db]
           ~@body))
-
 
 
