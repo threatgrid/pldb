@@ -44,7 +44,7 @@
                             (l/== q [x y]))))
          '([Ricky Lucy]))))
 
-;; to be added when we support retraction/indexing
+;; to be added when we support retraction
 
 ;;(retraction likes 'Bob 'Mary)
 
@@ -56,15 +56,17 @@
 ;;                             (== q [x y]))))
 ;;          (into #{} '([John Martha] [Ricky Lucy])))))
 
-;; (defrel rel1 ^:index a)
-;; (fact rel1 [1 2])
+(pldb/db-rel rel1 ^:index a)
+(def indexed-db
+  (pldb/db-facts [rel1 [1 2]]))
 
-;; (deftest test-rel-logic-29
-;;   (is (= (run* [q]
-;;                (fresh [a]
-;;                       (rel1 [q a])
-;;                       (== a 2)))
-;;          '(1))))
+(deftest test-rel-logic-29
+  (is (= (pldb/with-db indexed-db
+           (l/run* [q]
+                 (l/fresh [a]
+                        (rel1 [q a])
+                        (l/== a 2))))
+         '(1))))
 
 ;; (defrel rel2 ^:index e ^:index a ^:index v)
 ;; (facts rel2 [[:e1 :a1 :v1]
