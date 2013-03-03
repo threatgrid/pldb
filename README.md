@@ -66,12 +66,6 @@ To run a query with a given database, use with-db.
             (== q [x y]))))
 ```
 
-# Limitations
-
-- multiple arity relations are not supported yet
-- indexing is not implemented yet
-- retractions are not implemented yet
-
 # Build Status
 
 [![Build Status](https://buildhive.cloudbees.com/job/threatgrid/job/pldb/badge/icon)](https://buildhive.cloudbees.com/job/threatgrid/job/pldb/)
