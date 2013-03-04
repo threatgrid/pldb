@@ -1,4 +1,4 @@
-(defproject pldb "0.1.0"
+(defproject pldb "0.1.1"
   :description "PLDB - a persistent logic database for core.logic"
   :url "https://github.com/threatgrid/pldb/"
   :license {:name "Eclipse Public License"
