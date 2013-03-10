@@ -1,8 +1,30 @@
 (ns pldb.logic
   (:require [clojure.core.logic :as l]))
 
-(def ^:dynamic *logic-db* {})
 
+;; ----------------------------------------
+(def ^:dynamic *logic-dbs* [])
+
+(def empty-db {})
+
+
+(defmacro with-dbs [dbs & body]
+  `(binding [*logic-dbs* (concat *logic-dbs* ~dbs)]
+          ~@body))
+
+(defmacro with-db [db & body]
+  `(binding [*logic-dbs* (conj *logic-dbs* ~db)]
+          ~@body))
+
+(defn facts-for [kname]
+  (mapcat #(get-in % [kname ::unindexed])
+          *logic-dbs*))
+
+(defn facts-using-index [kname index val]
+  (mapcat #(get-in % [kname index val])
+          *logic-dbs*))
+
+;; ----------------------------------------
 (defn rel-key [rel]
   (if (keyword? rel)
     rel
@@ -10,12 +32,6 @@
 
 (defn rel-indexes [rel]
   (:indexes (meta rel)))
-
-(defn facts-for [kname]
-  (get-in *logic-db* [kname ::unindexed]))
-
-(defn facts-using-index [kname index val]
-  (get-in *logic-db* [kname index val]))
 
 (defn indexed? [v]
   (true? (:index (meta v))))
@@ -40,18 +56,22 @@
         indexes
         (vec (map indexed? args))]
     `(def ~name
-       (with-meta (fn [& query#]
-                    (fn [subs#]
-                      (let [facts#
-                            (if-let [index# (index-for-query subs# query# ~indexes)]
-                              (facts-using-index ~kname index# (l/walk* subs#
-                                                                       (nth query# index#)))
-                              (facts-for ~kname))]
-                        (l/to-stream (map (fn [potential#]
-                                            (l/unify subs# query# potential#))
-                                          facts#)))))
+       (with-meta
+         (fn [& query#]
+           (fn [subs#]
+             (let [facts#
+                   (if-let [index# (index-for-query subs# query# ~indexes)]
+                     (facts-using-index ~kname
+                                        index#
+                                        (l/walk* subs# (nth query# index#)))
+                     (facts-for ~kname))]
+               (l/to-stream (map (fn [potential#]
+                                   (l/unify subs# query# potential#))
+                                 facts#)))))
          {:rel-name ~kname
           :indexes ~indexes}))))
+
+;; ----------------------------------------
 
 (defn db-fact [db rel & args]
   (let [key
@@ -95,14 +115,13 @@
 
     (reduce remove-from-index-fn db-without-fact indexes-to-update)))
 
-(defn db-facts [& facts]
-  (reduce #(apply db-fact %1 %2) *logic-db* facts))
+;; ----------------------------------------
+(defn db-facts [base-db & facts]
+  (reduce #(apply db-fact %1 %2) base-db facts))
 
-(defn db-retractions [& retractions]
-  (reduce #(apply db-retraction %1 %2) *logic-db* retractions))
+(defn db [& facts]
+  (apply db-facts empty-db facts))
 
-(def empty-db {})
+(defn db-retractions [base-db & retractions]
+  (reduce #(apply db-retraction %1 %2) base-db retractions))
 
-(defmacro with-db [db & body]
-  `(binding [*logic-db* ~db]
-          ~@body))
