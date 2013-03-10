@@ -8,7 +8,7 @@ environments like web applications.
 
 # Usage
 
-Relations are defined in the same way as core.logic relations.  These relations 
+Relations are defined in the same way as core.logic relations.  These relations
 are bound to the namespace they are defined in, as in core.logic.
 
 ```clojure
@@ -18,26 +18,25 @@ are bound to the namespace they are defined in, as in core.logic.
 (pldb/db-rel fun p)
 ```
 
-Facts are persistent values. They can be created using db-facts,
-extending the current db context.
+Facts are persistent values. They can be created into a new empty db.
 
 ```clojure
 (def facts
-  (pldb/db-facts
+  (pldb/db
    [man 'Bob]
    [man 'John]
    [man 'Ricky]
-   
+
    [woman 'Mary]
    [woman 'Martha]
    [woman 'Lucy]
-   
+
    [likes 'Bob 'Mary]
    [likes 'John 'Martha]
    [likes 'Ricky 'Lucy]))
 ```
 
-Or they can be created from a given base database using db-fact.
+Or they can extend a given base database using db-fact.
 
 ```clojure
 (def facts
@@ -55,11 +54,30 @@ Or they can be created from a given base database using db-fact.
      (pldb/db-fact likes 'Ricky 'Lucy)))
 ```
 
+To retract a fact, create a new database with the fact retracted.
+
+```clojure
+(def facts-retracted
+  (-> facts
+      (pldb/db-retraction likes 'Bob 'Mary))
+```
+
 To run a query with a given database, use with-db.
 
 ```clojure
 (pldb/with-db facts
-    (run* [q]	
+    (run* [q]
+        (fresh [x y]
+            (likes x y)
+            (fun y)
+            (== q [x y]))))
+```
+
+To run a query across multiple databases, use with-dbs.
+
+```clojure
+(pldb/with-dbs [facts1 facts2 facts3]
+    (run* [q]
         (fresh [x y]
             (likes x y)
             (fun y)
