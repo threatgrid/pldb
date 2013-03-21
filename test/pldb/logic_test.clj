@@ -27,47 +27,50 @@
                 (pldb/db-fact fun 'Lucy)))
 
 (deftest test-facts0
-  (is (= (pldb/with-db facts0
-           (l/run* [q]
-                   (l/fresh [x y]
-                            (likes x y)
-                            (fun y)
-                            (l/== q [x y]))))
-         '())))
+  ( pldb/with-db facts0
+    (is (= 
+         (l/run* [q]
+                 (l/fresh [x y]
+                          (likes x y)
+                          (fun y)
+                          (l/== q [x y])))
+         '()))))
 
 (deftest test-facts1
-  (is (= (pldb/with-db facts1
-           (l/run* [q]
-                   (l/fresh [x y]
-                            (likes x y)
-                            (fun y)
-                            (l/== q [x y]))))
-         '([Ricky Lucy]))))
+  (pldb/with-db facts1
+    (is (= 
+         (l/run* [q]
+                 (l/fresh [x y]
+                          (likes x y)
+                          (fun y)
+                          (l/== q [x y])))
+         '([Ricky Lucy])))))
 
 (def facts1-retracted
   (-> facts1
       (pldb/db-retraction likes 'Bob 'Mary)))
 
 (deftest test-rel-retract
-  (is (= (into #{}
-               (pldb/with-db facts1-retracted
+  (pldb/with-db facts1-retracted
+    (is (= (into #{}
                  (l/run* [q]
                          (l/fresh [x y]
                                   (likes x y)
-                                  (l/== q [x y])))))
-         (into #{} '([John Martha] [Ricky Lucy])))))
+                                  (l/== q [x y]))))
+           (into #{} '([John Martha] [Ricky Lucy]))))))
 
 (pldb/db-rel rel1 ^:index a)
 (def indexed-db
   (pldb/db [rel1 [1 2]]))
 
 (deftest test-rel-logic-29
-  (is (= (pldb/with-db indexed-db
-           (l/run* [q]
+  (pldb/with-db indexed-db
+    (is (= 
+         (l/run* [q]
                  (l/fresh [a]
-                        (rel1 [q a])
-                        (l/== a 2))))
-         '(1))))
+                          (rel1 [q a])
+                          (l/== a 2)))
+         '(1)))))
 
 (pldb/db-rel rel2 ^:index e ^:index a ^:index v)
 (def facts2
