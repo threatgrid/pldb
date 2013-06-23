@@ -28,7 +28,7 @@
 
 (deftest test-facts0
   ( pldb/with-db facts0
-    (is (= 
+    (is (=
          (l/run* [q]
                  (l/fresh [x y]
                           (likes x y)
@@ -38,7 +38,7 @@
 
 (deftest test-facts1
   (pldb/with-db facts1
-    (is (= 
+    (is (=
          (l/run* [q]
                  (l/fresh [x y]
                           (likes x y)
@@ -65,7 +65,7 @@
 
 (deftest test-rel-logic-29
   (pldb/with-db indexed-db
-    (is (= 
+    (is (=
          (l/run* [q]
                  (l/fresh [a]
                           (rel1 [q a])
@@ -209,4 +209,3 @@
                                  (protocol :https https-port)
                                  (open-port ip http-port)
                                  (open-port ip https-port))))))))
-
