@@ -2,7 +2,6 @@
   (:require [clojure.core.logic :as l]
             [clojure.core.logic.protocols :as proto]))
 
-
 ;; ----------------------------------------
 (def ^:dynamic *logic-dbs* [])
 
@@ -47,14 +46,6 @@
                  :when (and indexable indexed)]
              i))))
 
-
-;; replacement for core.logic to-stream, which calls unify, but doesn't do
-;; everything == does
-(defn stream-unified [s v vals]
-  (when (seq vals)
-    (proto/mplus (proto/bind s (l/== v (first vals)))
-                 (fn [] (stream-unified s v (rest vals))))))
-
 (defmacro db-rel [name & args]
   (let [arity
         (count args)
@@ -74,7 +65,9 @@
                                         index#
                                         (l/walk* subs# (nth query# index#)))
                      (facts-for ~kname))]
-               (stream-unified subs# query# facts#))))
+               (l/to-stream (map (fn [potential#]
+                                   ((l/== query# potential#) subs#))
+                                 facts#)))))
          {:rel-name ~kname
           :indexes ~indexes}))))
 
