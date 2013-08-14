@@ -66,22 +66,24 @@ To run a query with a given database, use with-db.
 
 ```clojure
 (pldb/with-db facts
-    (run* [q]
+    (doall 
+      (run* [q]
         (fresh [x y]
             (likes x y)
             (fun y)
-            (== q [x y]))))
+            (== q [x y])))))
 ```
 
 To run a query across multiple databases, use with-dbs.
 
 ```clojure
 (pldb/with-dbs [facts1 facts2 facts3]
+  (doall
     (run* [q]
         (fresh [x y]
             (likes x y)
             (fun y)
-            (== q [x y]))))
+            (== q [x y])))))
 ```
 
 # Build Status
