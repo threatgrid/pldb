@@ -1,3 +1,8 @@
+# PLDB is now part of core.logic!
+
+I highly recommend you use the version of pldb in core.logic instead of this library! 
+
+
 # pldb
 
 A persistent core.logic database. The goal of pldb is to provide
